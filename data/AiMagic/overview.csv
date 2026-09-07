@@ -1,0 +1,156 @@
+# ----------------------------------------
+# View user engagement & retention overview
+# Account: Default Account for Firebase
+# Property: ai-magic-fbd2e
+# ----------------------------------------
+#  
+# Start date: 20260831
+# End date: 20260906
+Nth day,Active users
+0000,1176
+0001,1023
+0002,920
+0003,959
+0004,1090
+0005,1152
+0006,1219
+
+# Start date: 20260831
+# End date: 20260906
+Nth day,New users
+0000,744
+0001,602
+0002,466
+0003,558
+0004,695
+0005,729
+0006,720
+
+# Where do your new users come from?
+# Start date: 20260831
+# End date: 20260906
+First user primary channel group (Default Channel Group),New users
+Cross-network,2689
+Organic Search,1306
+Direct,513
+Paid Search,5
+
+#  
+# Start date: 20260831
+# End date: 20260906
+Page title and screen class,Views
+HomeScreen,74009
+InAppGalleryScreen,55531
+AdActivity,54100
+CropScreen,52451
+CommonResultScreen,48443
+DoubleAIVideoScreen,33871
+CommonProcessing,32942
+VideoPromptActivity,32390
+PremiumScreenCat,21417
+ImagePromptActivity,13830
+SplashScreen,13671
+ImageHubUploadScreen,10084
+LanguageScreen,7239
+PurchaseCreditsActivity,5352
+CustomOnBoardingActivity,4223
+AiEnhancerUploadScreen,3235
+ProxyBillingActivity,1902
+AIVideoSeeAllScreen,1821
+FileViewerActivity,1797
+ViewAllTemplatesActivity,1618
+BabyGenScreen,1025
+SingleAIVideoScreen,972
+BackgroundChangeScreen,502
+TransformationImageUploadScreen,486
+TransformationSeeAllScreen,461
+BackgrounRemovalUploadScreen,294
+BgResultScreen,267
+LoginActivity,228
+LicenseActivity,140
+PrivacyPolicy,86
+BodyEditor,4
+WelcomeBackActivity,2
+CropImageActivity,1
+FaceDanceSeeAllScreen,1
+FaceDanceUploadImageScreen,1
+FaceSwapImageUploadScreen,1
+ObjectRemovalScreen,1
+ProxyBillingActivityV2,1
+
+#  
+# Start date: 20260831
+# End date: 20260906
+Platform,Active users
+"[""Android""]",5671
+
+#  
+# Start date: 20260831
+# End date: 20260906
+Cohort,Day 1,Day 7
+0,0.11021505376344086,0.010752688172043012
+1,0.1264559068219634,0
+2,0.11802575107296137,0
+3,0.09123434704830054,0
+4,0.12086330935251799,0
+5,0.11796982167352538,0
+6,0.03880983182406209,0
+
+#  
+# Start date: 20260831
+# End date: 20260906
+Cohort,Day 1,Day 7
+0,533.719512195122,1178.5
+1,1019.7631578947369,0
+2,388.72727272727275,0
+3,598.156862745098,0
+4,531.0595238095239,0
+5,538.5232558139535,0
+6,528.3666666666667,0
+
+#  
+# Start date: 20260727
+# End date: 20260906
+Cohort,Average engagement time per active user
+0000,335.2191097242806
+0001,544.2962140152296
+0002,597.430418474537
+0003,619.0311888421937
+0004,673.2377011517917
+0005,703.3025262833203
+0006,686.0983159961719
+0007,696.8999020660004
+0008,623.7202882508842
+0009,524.1030718173968
+0010,569.4142786991963
+0011,589.6655451545737
+0012,753.0793144087735
+0013,710.8276172829577
+0014,753.1228099965168
+0015,715.7177964863102
+0016,615.5614812248912
+0017,779.3879412880076
+0018,778.3365203685204
+0019,897.8553391053389
+0020,1197.7886524103917
+0021,954.870652958153
+0022,865.9238438809866
+0023,706.9180082417582
+0024,946.017105263158
+0025,1013.2386544011543
+0026,912.9567736185383
+0027,710.2657580266955
+0028,765.7890211640212
+0029,853.2263605442176
+0030,1048.1884615384615
+0031,1074.2880952380951
+0032,1089.503823953824
+0033,977.2308333333334
+0034,981.1402116402116
+0035,1379.3080357142858
+0036,1141.0731292517007
+0037,780.7944444444444
+0038,298.175
+0039,685.8125
+0040,1292.5
+0041,22.75
