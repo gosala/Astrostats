@@ -24,7 +24,7 @@
             <div class="flex items-center gap-2">
                 <label for="appSelector" class="text-sm text-gray-400">App:</label>
                 <select id="appSelector" class="bg-gray-800 border border-gray-700 text-gray-100 px-3 py-1.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="all">[ All Apps ]</option>
+                    <!-- Dropdown populated dynamically from your configurations -->
                 </select>
             </div>
             
@@ -195,14 +195,12 @@
                 id: "Messages",
                 overview: "data/Messages/overview.csv",
                 events: "data/Messages/events.csv"
+            },
+            {
+                 id: "AiMagic",
+                 overview: "data/AiMagic/overview.csv",
+                 events: "data/AiMagic/events.csv"
             }
-            // To add a second app, simply upload its folder and add its paths here:
-            // ,
-            // {
-            //     id: "my-second-app",
-            //     overview: "data/my-second-app/overview.csv",
-            //     events: "data/my-second-app/events.csv"
-            // }
         ];
 
         let appRegistry = {};
@@ -219,7 +217,7 @@
                         const response = await fetch(app.overview);
                         if (response.ok) {
                             const text = await response.text();
-                            handleCSVUpload(text, false); // silent register
+                            handleCSVUpload(text, false, app.id); // Register under app ID
                             loadSuccess = true;
                         }
                     } catch (e) {
@@ -232,7 +230,7 @@
                         const response = await fetch(app.events);
                         if (response.ok) {
                             const text = await response.text();
-                            handleCSVUpload(text, false); // silent register
+                            handleCSVUpload(text, false, app.id); // Register under app ID
                             loadSuccess = true;
                         }
                     } catch (e) {
@@ -243,10 +241,6 @@
             
             // Re-render dashboard using loaded data
             if (loadSuccess) {
-                const keys = Object.keys(appRegistry);
-                if (keys.length > 0) {
-                    document.getElementById('appSelector').value = keys[0];
-                }
                 refreshDashboard();
             }
         }
@@ -281,18 +275,21 @@
             return blocks;
         }
 
-        function handleCSVUpload(text, setSelectorActive = true) {
+        function handleCSVUpload(text, setSelectorActive = true, fallbackName = "Uploaded App") {
             const rawBlocks = parseMultiBlockCSV(text);
             
-            let appName = "Uploaded App";
-            for (let block of rawBlocks) {
-                for (let comment of block.comments) {
-                    if (comment.includes('Property:')) {
-                        appName = comment.split('Property:')[1].trim();
-                        break;
+            // Prefer fallbackName (app.id) if loaded dynamically, otherwise parse from comments
+            let appName = fallbackName;
+            if (appName === "Uploaded App") {
+                for (let block of rawBlocks) {
+                    for (let comment of block.comments) {
+                        if (comment.includes('Property:')) {
+                            appName = comment.split('Property:')[1].trim();
+                            break;
+                        }
                     }
+                    if (appName !== "Uploaded App") break;
                 }
-                if (appName !== "Uploaded App") break;
             }
 
             let timelineActive = {};
@@ -396,24 +393,31 @@
 
         function refreshDashboard() {
             const selector = document.getElementById('appSelector');
-            const selectedApp = selector.value;
+            let selectedApp = selector.value;
             const appList = Object.keys(appRegistry);
 
-            const currentSelectedValue = selector.value;
-            selector.innerHTML = `<option value="all">[ All Apps ]</option>`;
+            // Rebuild selection drop down dynamically to avoid empty states or blank entries
+            selector.innerHTML = '';
             appList.forEach(app => {
                 const opt = document.createElement('option');
                 opt.value = app;
                 opt.textContent = app;
-                if (app === currentSelectedValue) opt.selected = true;
                 selector.appendChild(opt);
             });
 
+            // Keep the selected app, or fallback to the first loaded app as default
+            if (selectedApp && appRegistry[selectedApp]) {
+                selector.value = selectedApp;
+            } else if (appList.length > 0) {
+                selector.value = appList[0];
+                selectedApp = appList[0];
+            } else {
+                selectedApp = null;
+            }
+
             document.getElementById('statusAppsCount').textContent = appList.length;
 
-            if (selectedApp === 'all') {
-                renderAllAppsView();
-            } else {
+            if (selectedApp) {
                 renderSingleAppView(selectedApp);
             }
         }
