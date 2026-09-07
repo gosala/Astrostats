@@ -23,38 +23,37 @@
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
                 <label for="appSelector" class="text-sm text-gray-400">App:</label>
-                <!-- This dropdown now populates dynamically when new files are uploaded -->
                 <select id="appSelector" class="bg-gray-800 border border-gray-700 text-gray-100 px-3 py-1.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="all">[ All Apps ]</option>
-                    <option value="messenger-sms-and-home-app" selected>messenger-sms-and-home-app</option>
                 </select>
             </div>
             
             <button id="resetBtn" class="bg-red-900/40 hover:bg-red-800/60 border border-red-700/50 text-red-200 px-3 py-1.5 rounded-lg text-xs transition">
-                Clear Uploads
+                Clear View
             </button>
         </div>
     </header>
 
     <main class="p-6 max-w-[1600px] mx-auto space-y-6">
 
-        <!-- Upload Widget -->
+        <!-- Status Panel -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Sandbox Upload Area -->
             <div class="lg:col-span-2 border-2 border-dashed border-gray-750 bg-gray-950/40 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-900/40 transition group relative" id="dropzone">
                 <input type="file" id="csvFileInput" multiple accept=".csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                 <div class="w-12 h-12 bg-indigo-900/50 rounded-full flex items-center justify-center text-indigo-400 text-xl mb-3">📥</div>
-                <h3 class="font-medium text-gray-200">Drag & Drop Your GA4 CSV Files Here</h3>
+                <h3 class="font-medium text-gray-200">Sandbox: Preview Local CSV Files</h3>
                 <p class="text-xs text-gray-400 mt-1 max-w-md">
-                    Drop your <strong>Overview</strong> or <strong>Events List</strong> CSV files for any app [1].
+                    Drag & drop files to preview them locally. Commit files to your GitHub <code>data/</code> directory to save them permanently for others [1].
                 </p>
             </div>
             
             <!-- Metadata Card -->
             <div class="bg-gray-950 border border-gray-800 rounded-xl p-6 flex flex-col justify-between">
                 <div>
-                    <span class="text-[10px] bg-indigo-900/60 text-indigo-300 font-semibold px-2 py-1 rounded uppercase tracking-wider">Active Dataset</span>
-                    <h2 id="activeAppName" class="text-lg font-bold mt-2">messenger-sms-and-home-app</h2>
-                    <p id="activeAppPeriod" class="text-xs text-gray-400 mt-1">Period: Aug 7, 2026 – Sep 3, 2026</p>
+                    <span class="text-[10px] bg-indigo-900/60 text-indigo-300 font-semibold px-2 py-1 rounded uppercase tracking-wider">Active App Dataset</span>
+                    <h2 id="activeAppName" class="text-lg font-bold mt-2">Loading...</h2>
+                    <p id="activeAppPeriod" class="text-xs text-gray-400 mt-1">Period: Processing...</p>
                 </div>
                 <div class="border-t border-gray-850 mt-4 pt-4 text-xs text-gray-400 space-y-1">
                     <div class="flex justify-between">
@@ -62,8 +61,8 @@
                         <span id="activeAppPlatform" class="font-semibold text-gray-200">Android</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Loaded Apps:</span>
-                        <span id="statusAppsCount" class="font-semibold text-green-400">1</span>
+                        <span>Total Loaded Properties:</span>
+                        <span id="statusAppsCount" class="font-semibold text-green-400">0</span>
                     </div>
                 </div>
             </div>
@@ -73,25 +72,25 @@
         <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="bg-gradient-to-br from-sky-950/40 to-sky-900/10 border border-sky-500/30 rounded-2xl p-6 relative">
                 <p class="text-xs text-sky-300 font-bold uppercase tracking-wider">Active Users</p>
-                <p id="highlightActiveUsers" class="text-4xl font-extrabold text-sky-400 mt-2">783</p>
+                <p id="highlightActiveUsers" class="text-4xl font-extrabold text-sky-400 mt-2">0</p>
                 <p class="text-xs text-gray-500 mt-2">Total active Android users.</p>
             </div>
 
             <div class="bg-gradient-to-br from-amber-950/40 to-amber-900/10 border border-amber-500/30 rounded-2xl p-6 relative">
                 <p class="text-xs text-amber-300 font-bold uppercase tracking-wider">Avg Cohort Time Spent</p>
-                <p id="highlightTimeSpent" class="text-4xl font-extrabold text-amber-400 mt-2">24.4m</p>
+                <p id="highlightTimeSpent" class="text-4xl font-extrabold text-amber-400 mt-2">0m</p>
                 <p class="text-xs text-gray-500 mt-2">Engagement duration for returning Day 1 users.</p>
             </div>
 
             <div class="bg-gradient-to-br from-indigo-950/40 to-indigo-900/10 border border-indigo-500/30 rounded-2xl p-6 relative">
                 <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">Average Day 1 Retention</p>
-                <p id="highlightDay1Retention" class="text-4xl font-extrabold text-indigo-400 mt-2">15.4%</p>
+                <p id="highlightDay1Retention" class="text-4xl font-extrabold text-indigo-400 mt-2">0%</p>
                 <p class="text-xs text-gray-500 mt-2">Returning users after 24 hours.</p>
             </div>
 
             <div class="bg-gradient-to-br from-emerald-950/40 to-emerald-900/10 border border-emerald-500/30 rounded-2xl p-6 relative">
                 <p class="text-xs text-emerald-300 font-bold uppercase tracking-wider">Total Unique Events</p>
-                <p id="highlightEventsCount" class="text-4xl font-extrabold text-emerald-400 mt-2">20</p>
+                <p id="highlightEventsCount" class="text-4xl font-extrabold text-emerald-400 mt-2">0</p>
                 <p class="text-xs text-gray-500 mt-2">Different event types loaded.</p>
             </div>
         </section>
@@ -188,67 +187,68 @@
     </main>
 
     <script>
-        let appRegistry = {};
+        // ==========================================
+        // CONFIGURATION: Add your app files here!
+        // ==========================================
+        const targetApps = [
+            {
+                id: "Messages",
+                overview: "data/Messages/overview.csv",
+                events: "data/Messages/events.csv"
+            }
+            // To add a second app, simply upload its folder and add its paths here:
+            // ,
+            // {
+            //     id: "my-second-app",
+            //     overview: "data/my-second-app/overview.csv",
+            //     events: "data/my-second-app/events.csv"
+            // }
+        ];
 
-        function injectBaseSampleData() {
-            appRegistry['messenger-sms-and-home-app'] = {
-                metadata: {
-                    appName: 'messenger-sms-and-home-app',
-                    dateRange: '2026/08/07 to 2026/09/03',
-                    platform: 'Android',
-                    activeUsers: 783
-                },
-                dailyTimeline: [
-                    { day: 4, active: 47, newUsers: 45 }, { day: 5, active: 42, newUsers: 35 },
-                    { day: 6, active: 40, newUsers: 32 }, { day: 7, active: 28, newUsers: 23 },
-                    { day: 10, active: 23, newUsers: 17 }, { day: 12, active: 33, newUsers: 28 },
-                    { day: 13, active: 32, newUsers: 24 }, { day: 24, active: 181, newUsers: 174 },
-                    { day: 25, active: 152, newUsers: 113 }, { day: 26, active: 120, newUsers: 62 },
-                    { day: 27, active: 212, newUsers: 124 }
-                ],
-                acquisition: [
-                    { channel: 'Cross-network (Paid Campaign)', count: 346 },
-                    { channel: 'Organic Search', count: 269 },
-                    { channel: 'Direct / Store Install', count: 136 }
-                ],
-                screens: [
-                    { title: 'Launcher', views: 4719 },
-                    { title: 'MainActivity', views: 2385 },
-                    { title: 'SplashActivity', views: 1871 },
-                    { title: 'AfterCallActivity', views: 396 },
-                    { title: 'AppDrawerSettingsActivity', views: 265 }
-                ],
-                retentionRates: {
-                    4: { r1: 15.6, r7: 8.9 }, 5: { r1: 8.6, r7: 2.9 }, 12: { r1: 10.7, r7: 3.6 },
-                    18: { r1: 14.3, r7: 14.3 }, 24: { r1: 19.5, r7: 0 }, 25: { r1: 28.3, r7: 0 }
-                },
-                retentionEngagement: {
-                    4: { e1: 1464, e7: 628.5 }, 5: { e1: 1229.3, e7: 31 }, 12: { e1: 924.3, e7: 3236 },
-                    18: { e1: 686, e7: 10 }, 24: { e1: 858.4, e7: 0 }
-                },
-                events: [
-                    { name: 'user_engagement', count: 22676, users: 748 },
-                    { name: 'screen_view_AppDrawer', count: 10871, users: 314 },
-                    { name: 'screen_view_home', count: 6280, users: 415 },
-                    { name: 'session_start', count: 2448, users: 754 },
-                    { name: 'screen_view_Splash', count: 1857, users: 709 },
-                    { name: 'splash_complete', count: 1744, users: 685 },
-                    { name: 'screen_view_Onboarding_1', count: 1725, users: 637 },
-                    { name: 'screen_view_Chat', count: 1711, users: 158 },
-                    { name: 'conversation_row_click_home', count: 1493, users: 147 },
-                    { name: 'screen_view_Onboarding_2', count: 954, users: 241 },
-                    { name: 'first_open', count: 751, users: 750 },
-                    { name: 'screen_view_LauncherSetup', count: 739, users: 313 },
-                    { name: 'language_selected', count: 714, users: 655 },
-                    { name: 'back_button_click_Chat', count: 704, users: 73 },
-                    { name: 'screen_view_Settings', count: 674, users: 120 },
-                    { name: 'sms_received', count: 669, users: 76 },
-                    { name: 'launcher_setup_set_default_click_Launcher', count: 554, users: 294 },
-                    { name: 'onboarding_complete', count: 206, users: 173 },
-                    { name: 'app_exception', count: 68, users: 27 },
-                    { name: 'composer_fab_click_Home', count: 133, users: 58 }
-                ]
-            };
+        let appRegistry = {};
+        let growthChartInstance = null;
+        let channelChartInstance = null;
+
+        // Automatically load remote files from GitHub Repository
+        async function fetchGitHubData() {
+            let loadSuccess = false;
+            for (const app of targetApps) {
+                // Fetch Overview CSV
+                if (app.overview) {
+                    try {
+                        const response = await fetch(app.overview);
+                        if (response.ok) {
+                            const text = await response.text();
+                            handleCSVUpload(text, false); // silent register
+                            loadSuccess = true;
+                        }
+                    } catch (e) {
+                        console.warn(`Could not load overview for ${app.id} from repository.`, e);
+                    }
+                }
+                // Fetch Events CSV
+                if (app.events) {
+                    try {
+                        const response = await fetch(app.events);
+                        if (response.ok) {
+                            const text = await response.text();
+                            handleCSVUpload(text, false); // silent register
+                            loadSuccess = true;
+                        }
+                    } catch (e) {
+                        console.warn(`Could not load events for ${app.id} from repository.`, e);
+                    }
+                }
+            }
+            
+            // Re-render dashboard using loaded data
+            if (loadSuccess) {
+                const keys = Object.keys(appRegistry);
+                if (keys.length > 0) {
+                    document.getElementById('appSelector').value = keys[0];
+                }
+                refreshDashboard();
+            }
         }
 
         function parseMultiBlockCSV(text) {
@@ -281,10 +281,9 @@
             return blocks;
         }
 
-        function handleCSVUpload(text) {
+        function handleCSVUpload(text, setSelectorActive = true) {
             const rawBlocks = parseMultiBlockCSV(text);
             
-            // DYNAMIC APP DETECTION [1]
             let appName = "Uploaded App";
             for (let block of rawBlocks) {
                 for (let comment of block.comments) {
@@ -369,7 +368,6 @@
                 dailyTimeline.push({ day, active: timelineActive[day] || 0, newUsers: timelineNew[day] || 0 });
             });
 
-            // If the app doesn't exist, register empty parameters
             if (!appRegistry[appName]) {
                 appRegistry[appName] = {
                     metadata: { appName, dateRange: '2026/08/07 to 2026/09/03', platform: 'Android', activeUsers: 0 },
@@ -382,7 +380,6 @@
                 };
             }
 
-            // Merge uploaded parameters only if they have data
             if (activePlatformUsers) appRegistry[appName].metadata.activeUsers = activePlatformUsers;
             if (dailyTimeline.length) appRegistry[appName].dailyTimeline = dailyTimeline;
             if (channels.length) appRegistry[appName].acquisition = channels;
@@ -391,21 +388,17 @@
             if (Object.keys(retentionEngagement).length) appRegistry[appName].retentionEngagement = retentionEngagement;
             if (eventsList.length) appRegistry[appName].events = eventsList;
 
-            // Instantly switch dropdown selector to the newly uploaded app
-            document.getElementById('appSelector').value = appName;
-            
-            refreshDashboard();
+            if (setSelectorActive) {
+                document.getElementById('appSelector').value = appName;
+                refreshDashboard();
+            }
         }
-
-        let growthChartInstance = null;
-        let channelChartInstance = null;
 
         function refreshDashboard() {
             const selector = document.getElementById('appSelector');
             const selectedApp = selector.value;
             const appList = Object.keys(appRegistry);
 
-            // DYNAMIC DROPDOWN REBUILD
             const currentSelectedValue = selector.value;
             selector.innerHTML = `<option value="all">[ All Apps ]</option>`;
             appList.forEach(app => {
@@ -418,7 +411,11 @@
 
             document.getElementById('statusAppsCount').textContent = appList.length;
 
-            renderSingleAppView(selectedApp);
+            if (selectedApp === 'all') {
+                renderAllAppsView();
+            } else {
+                renderSingleAppView(selectedApp);
+            }
         }
 
         function renderSingleAppView(appName) {
@@ -444,7 +441,7 @@
             document.getElementById('highlightDay1Retention').textContent = `${d1Count ? (d1Total / d1Count).toFixed(1) : "0.0"}%`;
             document.getElementById('highlightTimeSpent').textContent = `${e1Count ? (e1Total / e1Count / 60).toFixed(1) : "0.0"}m`;
 
-            // Cohorts
+            // Cohorts Table
             const cohortTbody = document.getElementById('cohortTableBody');
             cohortTbody.innerHTML = '';
             const allCohortIds = Array.from(new Set([...Object.keys(app.retentionRates), ...Object.keys(app.retentionEngagement)]))
@@ -465,7 +462,7 @@
 
             renderEventsTable('');
 
-            // Timeline line chart
+            // Line chart
             if (growthChartInstance) growthChartInstance.destroy();
             const timelineDataActive = app.dailyTimeline.map(t => t.active);
             const timelineDataLabels = app.dailyTimeline.map(t => `Day ${t.day}`);
@@ -482,7 +479,7 @@
                 options: { responsive: true, maintainAspectRatio: false }
             });
 
-            // Channels chart
+            // Channels doughnut chart
             if (channelChartInstance) channelChartInstance.destroy();
             const acqData = app.acquisition.map(r => r.count);
             channelChartInstance = new Chart(document.getElementById('channelChart').getContext('2d'), {
@@ -494,7 +491,7 @@
                 options: { responsive: true, maintainAspectRatio: false }
             });
 
-            // Screen Views list
+            // Screen views list
             const screensTbody = document.getElementById('screensTableBody');
             screensTbody.innerHTML = '';
             app.screens.forEach(s => {
@@ -515,7 +512,7 @@
             const filtered = app.events.filter(e => e.name.toLowerCase().includes(filterQuery.toLowerCase()));
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">No events loaded/found matching "${filterQuery}"</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">No events loaded matching "${filterQuery}"</td></tr>`;
                 return;
             }
 
@@ -541,7 +538,10 @@
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (evt) => handleCSVUpload(evt.target.result);
+                reader.onload = (evt) => {
+                    handleCSVUpload(evt.target.result);
+                    refreshDashboard();
+                };
                 reader.readAsText(file);
             }
         });
@@ -555,7 +555,10 @@
             const file = e.dataTransfer.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (evt) => handleCSVUpload(evt.target.result);
+                reader.onload = (evt) => {
+                    handleCSVUpload(evt.target.result);
+                    refreshDashboard();
+                };
                 reader.readAsText(file);
             }
         });
@@ -567,9 +570,9 @@
 
         document.getElementById('appSelector').addEventListener('change', refreshDashboard);
 
+        // Fetch data files when the page is opened
         window.addEventListener('DOMContentLoaded', () => {
-            injectBaseSampleData();
-            refreshDashboard();
+            fetchGitHubData();
         });
     </script>
 </body>
