@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdMob Revenue Intelligence Dashboard</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse CSV Parser CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen transition-colors duration-200">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col justify-between shrink-0">
+            <div>
+                <!-- Brand Header -->
+                <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center space-x-3">
+                    <div class="bg-emerald-500 text-white p-2 rounded-lg">
+                        <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg tracking-tight">MonetizeIntel</h1>
+                        <p class="text-xs text-slate-400">AdMob Intelligence</p>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="p-4 space-y-1">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center space-x-3 w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('apps')" id="nav-apps" class="flex items-center space-x-3 w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <i data-lucide="smartphone" class="w-4 h-4"></i>
+                        <span>Apps</span>
+                    </button>
+                    <button onclick="switchTab('alarms')" id="nav-alarms" class="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="bell-ring" class="w-4 h-4 text-rose-500"></i>
+                            <span>Alarms</span>
+                        </div>
+                        <span id="alarm-count-badge" class="bg-rose-100 text-rose-700 text-xs px-2 py-0.5 rounded-full font-bold hidden">0</span>
+                    </button>
+                    <button onclick="switchTab('opportunities')" id="nav-opportunities" class="flex items-center space-x-3 w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-emerald-500"></i>
+                        <span>Opportunities</span>
+                    </button>
+                    <button onclick="switchTab('trends')" id="nav-trends" class="flex items-center space-x-3 w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <i data-lucide="trending-up" class="w-4 h-4"></i>
+                        <span>Trend Analysis</span>
+                    </button>
+                    <button onclick="switchTab('reports')" id="nav-reports" class="flex items-center space-x-3 w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span>Reports</span>
+                    </button>
+                    <button onclick="switchTab('csv')" id="nav-csv" class="flex items-center space-x-3 w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <i data-lucide="github" class="w-4 h-4 text-slate-900 dark:text-white"></i>
+                        <span>GitHub CSV Manager</span>
+                    </button>
+                    <button onclick="switchTab('settings')" id="nav-settings" class="flex items-center space-x-3 w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span>Config Settings</span>
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- Bottom Controls -->
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span id="demo-status-label" class="text-xs text-slate-400 font-medium">DEMO DATA</span>
+                    <button onclick="toggleDemoMode()" id="demo-toggle-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded">
+                        RESET DEMO
+                    </button>
+                </div>
+                <div class="flex items-center justify-between text-xs text-slate-500">
+                    <span>Dark Mode</span>
+                    <button onclick="toggleDarkMode()" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                        <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            <!-- TOP BAR -->
+            <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 flex items-center justify-between shrink-0 sticky top-0 z-10">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="relative w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+                        </span>
+                        <input type="text" id="global-search" oninput="handleGlobalSearch(this.value)" placeholder="Search apps, formats..." class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <!-- Live GitHub Sync Button -->
+                    <button onclick="syncFromGitHub()" class="flex items-center space-x-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 px-3 py-2 rounded-lg text-xs font-bold transition-all hover:bg-emerald-100/60">
+                        <i data-lucide="refresh-cw" id="sync-icon" class="w-3.5 h-3.5"></i>
+                        <span id="sync-btn-text">Sync GitHub Data</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <select id="filter-app" onchange="applyFilters()" class="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs rounded-lg px-3 py-2 focus:outline-none">
+                        <option value="all">All Apps</option>
+                    </select>
+                    
+                    <select id="filter-date" onchange="applyFilters()" class="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs rounded-lg px-3 py-2 focus:outline-none">
+                        <option value="30">Last 30 Days</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="15">Last 15 Days</option>
+                        <option value="all">Lifetime</option>
+                    </select>
+                    
+                    <button onclick="exportData()" class="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Export CSV</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- WORKSPACE PANELS -->
+            <div class="p-6 space-y-6 flex-1">
+                
+                <!-- GITHUB SYNC STATUS BANNER -->
+                <div id="github-sync-banner" class="hidden bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                            <i data-lucide="loader" class="w-5 h-5 animate-spin"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold" id="sync-banner-title">Syncing with GitHub...</p>
+                            <p class="text-[10px] text-slate-400" id="sync-banner-desc">Discovered directory data files. Downloading and parsing raw logs.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REVENUE ALARM BANNER (CRITICAL) -->
+                <div id="revenue-alarm-banner" class="hidden bg-rose-50 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900/40 rounded-xl p-4 flex items-start space-x-4">
+                    <div class="bg-rose-100 dark:bg-rose-900/50 p-2 rounded-lg text-rose-600 dark:text-rose-400">
+                        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-rose-800 dark:text-rose-400">🔴 REVENUE ALARM: <span id="alarm-banner-count">0</span> Critical issues detected</h3>
+                            <button onclick="switchTab('alarms')" class="text-xs font-semibold text-rose-700 dark:text-rose-400 hover:underline">View in Alarm Center &rarr;</button>
+                        </div>
+                        <p class="text-xs text-rose-600 dark:text-rose-500 mt-1" id="alarm-banner-preview">Leakage detected in properties.</p>
+                    </div>
+                </div>
+
+                <!-- 1. DASHBOARD TAB -->
+                <div id="tab-dashboard" class="tab-panel space-y-6">
+                    <!-- Executive KPIs -->
+                    <div>
+                        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Executive Portfolio Overview</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4" id="kpi-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- App Monetization Health Overview -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">App Portfolio Monetization Index</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                        <tr class="border-b border-slate-100 dark:border-slate-700 text-slate-400 font-medium pb-2">
+                                            <th class="py-2.5">App</th>
+                                            <th class="py-2.5">Revenue</th>
+                                            <th class="py-2.5">Impressions</th>
+                                            <th class="py-2.5">Show Rate</th>
+                                            <th class="py-2.5">Match Rate</th>
+                                            <th class="py-2.5 font-semibold text-center">Health Index</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="app-health-table-body">
+                                        <!-- Populated dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Account Monetization Score -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4">Monetization Score Breakdown</h3>
+                                <div class="flex items-center justify-center py-6">
+                                    <div class="relative flex items-center justify-center">
+                                        <svg class="w-32 h-32 transform -rotate-90">
+                                            <circle cx="64" cy="64" r="54" stroke="currentColor" class="text-slate-100 dark:text-slate-700" stroke-width="10" fill="transparent" />
+                                            <circle id="score-circle" cx="64" cy="64" r="54" stroke="currentColor" class="text-emerald-500" stroke-width="10" fill="transparent" stroke-dasharray="339.3" stroke-dashoffset="0" />
+                                        </svg>
+                                        <div class="absolute text-center">
+                                            <span id="score-value" class="text-3xl font-black">78</span>
+                                            <span class="text-slate-400 block text-[10px]">Score</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-2 mt-2">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-slate-400">Demand Availability (Match Rate)</span>
+                                    <span class="font-medium" id="breakdown-demand">89%</span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-slate-400">Display Execution (Show Rate)</span>
+                                    <span class="font-medium" id="breakdown-display">64%</span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-slate-400">User Engagement (CTR)</span>
+                                    <span class="font-medium" id="breakdown-engagement">1.8%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trends & Funnel Charting -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Ad Revenue & Monetization Trend</h3>
+                                <select id="trend-metric-select" onchange="renderTrendChart()" class="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[10px] font-bold rounded-lg px-2 py-1 focus:outline-none">
+                                    <option value="revenue">Revenue ($)</option>
+                                    <option value="impressions">Impressions</option>
+                                    <option value="show_rate">Show Rate (%)</option>
+                                    <option value="match_rate">Match Rate (%)</option>
+                                    <option value="ctr">CTR (%)</option>
+                                    <option value="arpv">ARPV ($)</option>
+                                </select>
+                            </div>
+                            <div class="relative h-[280px]">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Funnel Loss -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">Account-Wide Funnel Loss</h3>
+                                <p class="text-[10px] text-slate-400 mb-4">Analyze flow loss down to final clickthrough.</p>
+                                <div class="space-y-3" id="funnel-container">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4">Monetization by Ad Format</h3>
+                            <div class="space-y-4" id="format-performance-list">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4">Engine Diagnostics</h3>
+                                <div class="space-y-3" id="diagnostics-list">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                            <button onclick="switchTab('alarms')" class="mt-4 w-full text-center py-2.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 transition-colors">
+                                View Detailed Diagnostics &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. APPS LIST TAB -->
+                <div id="tab-apps" class="tab-panel hidden space-y-6">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">App Performance Hub</h2>
+                    <div id="app-explorer-container" class="space-y-6">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- 3. ALARM CENTER TAB -->
+                <div id="tab-alarms" class="tab-panel hidden space-y-6">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">Revenue Alarm Center</h2>
+                    <div class="space-y-4" id="alarm-center-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- 4. REVENUE OPPORTUNITIES TAB -->
+                <div id="tab-opportunities" class="tab-panel hidden space-y-6">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">Revenue Opportunity Engine</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="opportunities-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- 5. TREND ANALYSIS TAB -->
+                <div id="tab-trends" class="tab-panel hidden space-y-6">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">Advanced Trend Analysis</h2>
+                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <select id="trend-tab-metric" onchange="renderTrendTabChart()" class="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs rounded-lg px-3 py-1.5 focus:outline-none">
+                                <option value="revenue">Estimated Earnings ($)</option>
+                                <option value="impressions">Impressions</option>
+                                <option value="requests">Requests</option>
+                                <option value="show_rate">Show Rate (%)</option>
+                            </select>
+                            <div class="flex space-x-2">
+                                <button onclick="setTrendInterval('daily')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white" id="btn-interval-daily">Daily</button>
+                                <button onclick="setTrendInterval('weekly')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-transparent text-slate-400" id="btn-interval-weekly">Weekly</button>
+                            </div>
+                        </div>
+                        <div class="relative h-[400px]">
+                            <canvas id="trendTabChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. REPORTS TAB -->
+                <div id="tab-reports" class="tab-panel hidden space-y-6">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">Executive Report Compiler</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+                            <select id="report-source-selector" onchange="compileReport()" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs rounded-lg px-3 py-2.5 focus:outline-none"></select>
+                            <button onclick="copyToClipboard()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg text-xs font-bold transition-colors">Copy Email Report</button>
+                            <a id="mailto-anchor" href="#" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center">Send via Mail Client</a>
+                        </div>
+                        <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                            <div id="report-preview-box" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 text-xs font-mono whitespace-pre-wrap select-all"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. GITHUB CSV DATA MANAGER TAB -->
+                <div id="tab-csv" class="tab-panel hidden space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">GitHub Database Integration</h2>
+                            <p class="text-xs text-slate-400">Manage directory imports linked to your hosting environment.</p>
+                        </div>
+                        <button onclick="syncFromGitHub()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors">
+                            Force Remote Pull
+                        </button>
+                    </div>
+
+                    <!-- Repository Configuration Details -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-4 col-span-1">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Connection Config</h3>
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block font-semibold mb-1">GitHub Username</label>
+                                    <input type="text" id="gh-username" value="jay" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold mb-1">Repository Name</label>
+                                    <input type="text" id="gh-repo" value="Astrostats" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold mb-1">CSV Directory Path</label>
+                                    <input type="text" id="gh-path" value="data" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold mb-1">Branch</label>
+                                    <input type="text" id="gh-branch" value="main" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold mb-1">GitHub Personal Access Token (Optional)</label>
+                                    <input type="password" id="gh-token" placeholder="Optional - required only if private repo" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                </div>
+                                <button onclick="saveGitHubSettings()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-bold transition-colors">
+                                    Update Settings & Resync
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Loaded files status -->
+                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 col-span-2">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Active Imports Index</h3>
+                                <button onclick="clearImportedData()" class="text-xs text-rose-500 font-bold hover:underline">Reset to Demo</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-200 dark:border-slate-700 text-slate-400 font-semibold pb-2">
+                                            <th class="py-2.5">File Reference</th>
+                                            <th class="py-2.5">Records</th>
+                                            <th class="py-2.5">Type</th>
+                                            <th class="py-2.5 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="imported-files-list">
+                                        <!-- Populated dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 8. SETTINGS TAB -->
+                <div id="tab-settings" class="tab-panel hidden space-y-6">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">Revenue Health Configuration Engine</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-4">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Show Rate Limits</h3>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Critical (Red Limit)</label>
+                                <input type="range" min="10" max="90" step="5" id="threshold-show-red" value="50" oninput="updateSettingsDisplay()" class="w-full accent-rose-500">
+                                <span class="text-xs text-rose-500 font-bold mt-1 block" id="lbl-show-red">50%</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Healthy (Green Limit)</label>
+                                <input type="range" min="40" max="95" step="5" id="threshold-show-green" value="70" oninput="updateSettingsDisplay()" class="w-full accent-emerald-500">
+                                <span class="text-xs text-emerald-500 font-bold mt-1 block" id="lbl-show-green">70%</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-4">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Match Rate Limits</h3>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Critical (Red Limit)</label>
+                                <input type="range" min="10" max="90" step="5" id="threshold-match-red" value="60" oninput="updateSettingsDisplay()" class="w-full accent-rose-500">
+                                <span class="text-xs text-rose-500 font-bold mt-1 block" id="lbl-match-red">60%</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1">Healthy (Green Limit)</label>
+                                <input type="range" min="40" max="95" step="5" id="threshold-match-green" value="80" oninput="updateSettingsDisplay()" class="w-full accent-emerald-500">
+                                <span class="text-xs text-emerald-500 font-bold mt-1 block" id="lbl-match-green">80%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="saveSettings()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-xs font-bold transition-colors">Apply Configurations</button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- FIELD MAPPER MODAL (Backup fallback for anomalous CSV configurations) -->
+    <div id="field-mapper-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-800 max-w-lg w-full rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl p-6 space-y-4">
+            <h3 class="text-base font-bold text-amber-500">Unrecognized Column Mappings</h3>
+            <p class="text-xs text-slate-400">Map the parsed attributes below manually to proceed.</p>
+            <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2" id="mapper-fields-container"></div>
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                <button onclick="cancelMapping()" class="text-xs font-semibold text-slate-500 px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">Cancel</button>
+                <button onclick="applyMapping()" class="bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ENGINE CODE -->
+    <script>
+        let appState = {
+            rawRecords: [],
+            selectedApp: 'all',
+            selectedDateRange: 30,
+            currentTab: 'dashboard',
+            searchQuery: '',
+            activeFilters: { app: 'all', date: '30' },
+            importedFiles: [],
+            // Core Config
+            config: {
+                showRateRed: 50,
+                showRateGreen: 70,
+                matchRateRed: 60,
+                matchRateGreen: 80,
+                ctrRedDrop: 20,
+                arpvRedDrop: 20,
+            },
+            // GitHub connection parameters
+            github: {
+                username: 'jay',
+                repo: 'Astrostats',
+                path: 'data',
+                branch: 'main',
+                token: ''
+            },
+            activeAlarms: [],
+            opportunities: [],
+            charts: { trend: null, trendTab: null },
+            trendTabInterval: 'daily',
+            mappingData: { fileHeaders: [], parsedResults: null, fileName: '' }
+        };
+
+        const COLUMN_MAP_DICT = {
+            app: ['app', 'application', 'app name', 'platform'],
+            date: ['date', 'day', 'timestamp', 'time'],
+            ad_format: ['ad format', 'format', 'ad_format', 'inventory type'],
+            ad_unit: ['ad unit', 'ad_unit', 'placement', 'unit id', 'ad unit id'],
+            requests: ['ad requests', 'requests', 'queries', 'ad_requests'],
+            matched_requests: ['matched requests', 'matches', 'matched queries', 'matched_requests'],
+            impressions: ['impressions', 'ad impressions', 'impr.', 'views'],
+            clicks: ['clicks', 'ad clicks'],
+            revenue: ['estimated earnings', 'earnings ($)', 'earnings', 'revenue', 'revenue ($)', 'net revenue']
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadStateFromLocalStorage();
+            
+            // Set dynamic inputs with state configuration
+            document.getElementById('gh-username').value = appState.github.username;
+            document.getElementById('gh-repo').value = appState.github.repo;
+            document.getElementById('gh-path').value = appState.github.path;
+            document.getElementById('gh-branch').value = appState.github.branch;
+            document.getElementById('gh-token').value = appState.github.token || '';
+
+            if (appState.rawRecords.length === 0) {
+                // If there are no cached logs, run initial connection check to GitHub
+                syncFromGitHub();
+            } else {
+                // Otherwise initialize on state cached inside the browser
+                updateGitHubStatusLabel();
+                initDashboard();
+            }
+        });
+
+        function loadStateFromLocalStorage() {
+            const savedState = localStorage.getItem('admob_monetize_state');
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    appState.rawRecords = parsed.rawRecords || [];
+                    appState.importedFiles = parsed.importedFiles || [];
+                    if (parsed.config) appState.config = parsed.config;
+                    if (parsed.github) appState.github = parsed.github;
+                } catch(e) {
+                    console.warn("Could not reload local storage data.");
+                }
+            }
+        }
+
+        function saveStateToLocalStorage() {
+            try {
+                localStorage.setItem('admob_monetize_state', JSON.stringify({
+                    rawRecords: appState.rawRecords,
+                    importedFiles: appState.importedFiles,
+                    config: appState.config,
+                    github: appState.github
+                }));
+            } catch (e) {
+                console.error("Local Storage limit exceeded.");
+            }
+        }
+
+        function initDashboard() {
+            updateDashboardDropdowns();
+            processOperationalIntelligence();
+            renderDashboardMetrics();
+            
+            setTimeout(() => {
+                renderTrendChart();
+                if (appState.charts.trendTab) renderTrendTabChart();
+            }, 100);
+        }
+
+        function updateDashboardDropdowns() {
+            const appSelect = document.getElementById('filter-app');
+            const apps = [...new Set(appState.rawRecords.map(r => r.app))];
+            
+            appSelect.innerHTML = '<option value="all">All Apps</option>';
+            apps.forEach(app => {
+                const opt = document.createElement('option');
+                opt.value = app;
+                opt.innerText = app;
+                if (appState.activeFilters.app === app) opt.selected = true;
+                appSelect.appendChild(opt);
+            });
+        }
+
+        function updateGitHubStatusLabel() {
+            const label = document.getElementById('demo-status-label');
+            const hasRealData = appState.importedFiles.some(f => !f.isDemo);
+            if (hasRealData) {
+                label.innerText = "GITHUB SYNCED";
+                label.className = "text-xs text-emerald-500 font-bold tracking-wider";
+            } else {
+                label.innerText = "DEMO DATA";
+                label.className = "text-xs text-amber-500 font-bold tracking-wider";
+            }
+        }
+
+        // --- GITHUB SYNC ENGINE ---
+        async function syncFromGitHub() {
+            const syncIcon = document.getElementById('sync-icon');
+            const syncText = document.getElementById('sync-btn-text');
+            const syncBanner = document.getElementById('github-sync-banner');
+
+            // Visual loading flags
+            syncIcon.classList.add('animate-spin');
+            syncText.innerText = "Connecting...";
+            syncBanner.classList.remove('hidden');
+
+            const { username, repo, path, branch, token } = appState.github;
+            const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}?ref=${branch}`;
+
+            const headers = {};
+            if (token && token.trim() !== "") {
+                headers['Authorization'] = `token ${token.trim()}`;
+            }
+
+            try {
+                document.getElementById('sync-banner-title').innerText = "Querying GitHub Directory...";
+                const response = await fetch(apiUrl, { headers });
+                
+                if (!response.ok) {
+                    throw new Error(`GitHub Directory Access Failed (Status ${response.status}). fallback to demo.`);
+                }
+
+                const contents = await response.json();
+                const csvFiles = contents.filter(item => item.type === 'file' && item.name.endsWith('.csv'));
+
+                if (csvFiles.length === 0) {
+                    throw new Error(`No CSV files discovered inside folder: "${path}"`);
+                }
+
+                // Clear demo data
+                appState.rawRecords = [];
+                appState.importedFiles = [];
+
+                for (let i = 0; i < csvFiles.length; i++) {
+                    const fileObj = csvFiles[i];
+                    document.getElementById('sync-banner-title').innerText = `Syncing [${i + 1}/${csvFiles.length}]`;
+                    document.getElementById('sync-banner-desc').innerText = `Downloading and compiling ${fileObj.name}`;
+                    
+                    const fileContentResponse = await fetch(fileObj.download_url, { headers });
+                    const fileTextData = await fileContentResponse.text();
+
+                    await parseAndCommitRemoteCSV(fileTextData, fileObj.name);
+                }
+
+                saveStateToLocalStorage();
+                updateGitHubStatusLabel();
+                initDashboard();
+                
+                alert(`GitHub synchronization successful. Discovered and compiled ${csvFiles.length} properties.`);
+            } catch (err) {
+                console.error(err);
+                // If it fails and we have no records, generate standard demo sets
+                if (appState.rawRecords.length === 0) {
+                    generateDemoData();
+                }
+                alert(`Sync Interrupted: ${err.message}`);
+            } finally {
+                syncIcon.classList.remove('animate-spin');
+                syncText.innerText = "Sync GitHub Data";
+                syncBanner.classList.add('hidden');
+            }
+        }
+
+        function parseAndCommitRemoteCSV(csvString, filename) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(csvString, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        const headers = results.meta.fields;
+                        const normalizedMapping = {};
+                        let missingKeys = [];
+
+                        Object.keys(COLUMN_MAP_DICT).forEach(standardKey => {
+                            const aliases = COLUMN_MAP_DICT[standardKey];
+                            const matchedHeader = headers.find(h => aliases.includes(h.toLowerCase().trim()));
+                            if (matchedHeader) {
+                                normalizedMapping[standardKey] = matchedHeader;
+                            } else {
+                                missingKeys.push(standardKey);
+                            }
+                        });
+
+                        const coreMissing = ['app', 'requests', 'impressions', 'revenue'].filter(k => !normalizedMapping[k]);
+                        
+                        if (coreMissing.length > 0) {
+                            // Column mismatch fallback
+                            appState.mappingData.fileHeaders = headers;
+                            appState.mappingData.parsedResults = results;
+                            appState.mappingData.fileName = filename;
+                            showFieldMapper(headers, coreMissing);
+                            resolve(); // will resolve once manual mapper applies
+                        } else {
+                            commitNormalizedData(results.data, normalizedMapping, filename);
+                            resolve();
+                        }
+                    },
+                    error: function(err) {
+                        reject(err);
+                    }
+                });
+            });
+        }
+
+        function saveGitHubSettings() {
+            appState.github.username = document.getElementById('gh-username').value.trim();
+            appState.github.repo = document.getElementById('gh-repo').value.trim();
+            appState.github.path = document.getElementById('gh-path').value.trim();
+            appState.github.branch = document.getElementById('gh-branch').value.trim();
+            appState.github.token = document.getElementById('gh-token').value.trim();
+
+            saveStateToLocalStorage();
+            syncFromGitHub();
+        }
+
+        // --- CORE LOGIC ---
+        function generateDemoData() {
+            const tempRecords = [];
+            const apps = [
+                { name: "Neon Bounce (Android)", isHealthy: true },
+                { name: "Word Master Pro (iOS)", criticalShowRate: true },
+                { name: "Pixel Quest Adventure", criticalMatchRate: true },
+                { name: "Sudoku Minimalist (iOS)", fallingARPV: true }
+            ];
+
+            const adFormats = [
+                { type: "Rewarded", ctrBase: 3.8, ecpmBase: 12.0 },
+                { type: "Interstitial", ctrBase: 1.9, ecpmBase: 7.5 },
+                { type: "Banner", ctrBase: 0.45, ecpmBase: 0.65 },
+                { type: "App Open", ctrBase: 1.2, ecpmBase: 4.5 }
+            ];
+
+            const today = new Date("2026-09-08");
+
+            for (let d = 30; d >= 0; d--) {
+                const currentDate = new Date(today);
+                currentDate.setDate(today.getDate() - d);
+                const dateStr = currentDate.toISOString().split('T')[0];
+
+                apps.forEach(app => {
+                    adFormats.forEach(format => {
+                        let requests = Math.floor(Math.random() * 20000) + 10000;
+                        let matchRate = 0.88;
+                        let showRate = 0.74;
+                        let ctr = format.ctrBase;
+                        let ecpm = format.ecpmBase;
+
+                        if (app.criticalShowRate && format.type === "Rewarded") {
+                            showRate = 0.41;
+                            requests = requests * 1.5;
+                        }
+
+                        if (app.criticalMatchRate && format.type === "Interstitial") {
+                            matchRate = 0.52;
+                        }
+
+                        if (app.fallingARPV && format.type === "Banner") {
+                            const trendImpact = (30 - d) / 30;
+                            ecpm = format.ecpmBase * (1.0 - (trendImpact * 0.45));
+                        }
+
+                        const matched = Math.floor(requests * matchRate);
+                        const impressions = Math.floor(matched * showRate);
+                        const clicks = Math.floor(impressions * (ctr / 100));
+                        const revenue = (impressions * ecpm) / 1000;
+                        const arpv = revenue / Math.max(1, impressions);
+
+                        tempRecords.push({
+                            app: app.name,
+                            date: dateStr,
+                            ad_format: format.type,
+                            ad_unit: `${format.type}_Main_Placement`,
+                            requests: requests,
+                            matched_requests: matched,
+                            match_rate: matchRate * 100,
+                            show_rate: showRate * 100,
+                            impressions: impressions,
+                            clicks: clicks,
+                            ctr: ctr,
+                            revenue: revenue,
+                            arpv: arpv,
+                            ecpm: ecpm
+                        });
+                    });
+                });
+            }
+
+            appState.rawRecords = tempRecords;
+            appState.importedFiles = [{
+                fileName: "demo_data_source.csv",
+                appName: "Combined Portfolio Demo",
+                rows: tempRecords.length,
+                dateRange: "Aug 9, 2026 - Sep 8, 2026",
+                formats: "Rewarded, Interstitial, Banner, App Open",
+                isDemo: true
+            }];
+            saveStateToLocalStorage();
+            updateGitHubStatusLabel();
+        }
+
+        function toggleDemoMode() {
+            localStorage.clear();
+            appState.rawRecords = [];
+            appState.importedFiles = [];
+            generateDemoData();
+            initDashboard();
+            switchTab('dashboard');
+        }
+
+        function processOperationalIntelligence() {
+            appState.activeAlarms = [];
+            appState.opportunities = [];
+
+            const apps = [...new Set(appState.rawRecords.map(r => r.app))];
+            
+            apps.forEach(app => {
+                const appRows = appState.rawRecords.filter(r => r.app === app);
+                const formats = [...new Set(appRows.map(r => r.ad_format))];
+                
+                formats.forEach(fmt => {
+                    const fmtRows = appRows.filter(r => r.ad_format === fmt);
+                    const aggFmt = aggregateRecords(fmtRows);
+
+                    if (aggFmt.show_rate < appState.config.showRateRed) {
+                        const expectedShowCount = aggFmt.matched_requests * (appState.config.showRateGreen / 100);
+                        const lostViews = Math.max(0, expectedShowCount - aggFmt.impressions);
+                        const lostRevRisk = (lostViews * aggFmt.ecpm) / 1000;
+
+                        appState.activeAlarms.push({
+                            id: `alarm-${app}-${fmt}-show`.replace(/\s+/g, '-'),
+                            severity: 'critical',
+                            app: app,
+                            format: fmt,
+                            metric: 'Show Rate',
+                            value: aggFmt.show_rate.toFixed(1) + '%',
+                            threshold: appState.config.showRateGreen + '%',
+                            revenueRisk: lostRevRisk,
+                            issue: `Critical display gap in ${fmt} placements.`,
+                            interpretation: "Match Rate is healthy, but layout elements fail to successfully render ad impressions inside active viewport callbacks.",
+                            recommendation: "Ensure display components load efficiently inside structural views. Debug listener hooks checking frame status."
+                        });
+                    }
+
+                    if (aggFmt.match_rate < appState.config.matchRateRed) {
+                        const expectedMatchCount = aggFmt.requests * (appState.config.matchRateGreen / 100);
+                        const lostMatches = Math.max(0, expectedMatchCount - aggFmt.matched_requests);
+                        const lostRevRisk = (lostMatches * (aggFmt.show_rate / 100) * aggFmt.ecpm) / 1000;
+
+                        appState.activeAlarms.push({
+                            id: `alarm-${app}-${fmt}-match`.replace(/\s+/g, '-'),
+                            severity: 'critical',
+                            app: app,
+                            format: fmt,
+                            metric: 'Match Rate',
+                            value: aggFmt.match_rate.toFixed(1) + '%',
+                            threshold: appState.config.matchRateGreen + '%',
+                            revenueRisk: lostRevRisk,
+                            issue: `Sub-optimal Match Rate for ${fmt} calls.`,
+                            interpretation: "Ad requests are triggering, but available inventory sources fail to supply matches. This shows bidding configuration gaps.",
+                            recommendation: "Check pricing floor parameters. Low baseline targets inside mediation networks might limit active buyer matching segments."
+                        });
+                    }
+
+                    if (aggFmt.ctr > 2.5 && aggFmt.show_rate >= appState.config.showRateGreen) {
+                        appState.opportunities.push({
+                            id: `opp-${app}-${fmt}`.replace(/\s+/g, '-'),
+                            app: app,
+                            format: fmt,
+                            metric: 'CTR',
+                            value: aggFmt.ctr.toFixed(1) + '%',
+                            opportunity: "High conversion inventory segment.",
+                            diagnosis: `${fmt} exhibits solid interaction ratios (${aggFmt.ctr.toFixed(1)}%).`,
+                            recommendation: "Evaluate increased placement exposure or verify whether optimized bidding segments are configured inside partner platforms.",
+                            impactScore: Math.min(100, Math.floor(aggFmt.revenue * 0.35))
+                        });
+                    }
+                });
+            });
+
+            const alarmCount = appState.activeAlarms.filter(a => a.severity === 'critical').length;
+            const alarmBadge = document.getElementById('alarm-count-badge');
+            const alarmBanner = document.getElementById('revenue-alarm-banner');
+            
+            if (alarmCount > 0) {
+                alarmBadge.innerText = alarmCount;
+                alarmBadge.classList.remove('hidden');
+                
+                alarmBanner.classList.remove('hidden');
+                document.getElementById('alarm-banner-count').innerText = alarmCount;
+                
+                const topAlarm = appState.activeAlarms[0];
+                document.getElementById('alarm-banner-preview').innerText = 
+                    `${topAlarm.app} (${topAlarm.format}) has low ${topAlarm.metric} of ${topAlarm.value}. Est. Loss Risk: $${topAlarm.revenueRisk.toFixed(2)}`;
+            } else {
+                alarmBadge.classList.add('hidden');
+                alarmBanner.classList.add('hidden');
+            }
+
+            const reportSelect = document.getElementById('report-source-selector');
+            if (reportSelect) {
+                reportSelect.innerHTML = '';
+                appState.activeAlarms.forEach(alarm => {
+                    const opt = document.createElement('option');
+                    opt.value = alarm.id;
+                    opt.innerText = `${alarm.app} - ${alarm.format} ${alarm.metric} (${alarm.value})`;
+                    reportSelect.appendChild(opt);
+                });
+                
+                if (appState.activeAlarms.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.value = "none";
+                    opt.innerText = "No critical alerts discovered";
+                    reportSelect.appendChild(opt);
+                }
+                compileReport();
+            }
+        }
+
+        function calculateMonetizationScore() {
+            if (appState.rawRecords.length === 0) return 0;
+            const agg = aggregateRecords(appState.rawRecords);
+            
+            const matchScore = Math.min(100, (agg.match_rate / appState.config.matchRateGreen) * 100);
+            const showScore = Math.min(100, (agg.show_rate / appState.config.showRateGreen) * 100);
+            const ctrScore = Math.min(100, (agg.ctr / 2.0) * 100);
+            
+            return Math.round((matchScore * 0.35) + (showScore * 0.45) + (ctrScore * 0.20));
+        }
+
+        function aggregateRecords(rows) {
+            let requests = 0, matched = 0, impressions = 0, clicks = 0, revenue = 0;
+
+            rows.forEach(r => {
+                requests += Number(r.requests) || 0;
+                matched += Number(r.matched_requests) || 0;
+                impressions += Number(r.impressions) || 0;
+                clicks += Number(r.clicks) || 0;
+                revenue += Number(r.revenue) || 0;
+            });
+
+            const match_rate = requests > 0 ? (matched / requests) * 100 : 0;
+            const show_rate = matched > 0 ? (impressions / matched) * 100 : 0;
+            const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+            const ecpm = impressions > 0 ? (revenue / impressions) * 1000 : 0;
+            const arpv = impressions > 0 ? (revenue / impressions) : 0;
+
+            return { requests, matched_requests: matched, impressions, clicks, revenue, match_rate, show_rate, ctr, ecpm, arpv };
+        }
+
+        function getFilteredRecords() {
+            let records = appState.rawRecords;
+            
+            if (appState.activeFilters.app !== 'all') {
+                records = records.filter(r => r.app === appState.activeFilters.app);
+            }
+            
+            if (appState.activeFilters.date !== 'all') {
+                const limitDays = Number(appState.activeFilters.date);
+                const baseDate = new Date("2026-09-08");
+                baseDate.setDate(baseDate.getDate() - limitDays);
+                
+                records = records.filter(r => new Date(r.date) >= baseDate);
+            }
+            
+            if (appState.searchQuery.trim() !== '') {
+                const query = appState.searchQuery.toLowerCase();
+                records = records.filter(r => 
+                    r.app.toLowerCase().includes(query) ||
+                    r.ad_format.toLowerCase().includes(query) ||
+                    r.ad_unit.toLowerCase().includes(query)
+                );
+            }
+
+            return records;
+        }
+
+        function renderDashboardMetrics() {
+            const filtered = getFilteredRecords();
+            const agg = aggregateRecords(filtered);
+
+            const kpis = [
+                { title: "Estimated Earnings", value: `$${agg.revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, sub: "Net Revenue", status: agg.revenue > 0 ? "healthy" : "danger" },
+                { title: "Impressions", value: agg.impressions.toLocaleString(), sub: "Total Served Views", status: agg.impressions > 0 ? "healthy" : "danger" },
+                { title: "Show Rate", value: agg.show_rate.toFixed(1) + "%", sub: `Target: >= ${appState.config.showRateGreen}%`, status: agg.show_rate >= appState.config.showRateGreen ? "healthy" : (agg.show_rate < appState.config.showRateRed ? "danger" : "warning") },
+                { title: "Match Rate", value: agg.match_rate.toFixed(1) + "%", sub: `Target: >= ${appState.config.matchRateGreen}%`, status: agg.match_rate >= appState.config.matchRateGreen ? "healthy" : (agg.match_rate < appState.config.matchRateRed ? "danger" : "warning") },
+                { title: "eCPM", value: `$${agg.ecpm.toFixed(2)}`, sub: "Avg per 1k views", status: "stable" },
+                { title: "Engagement CTR", value: agg.ctr.toFixed(2) + "%", sub: "User Conversions", status: agg.ctr > 1.5 ? "healthy" : "stable" }
+            ];
+
+            const grid = document.getElementById('kpi-grid');
+            grid.innerHTML = '';
+            kpis.forEach(kpi => {
+                let statusColor = "border-slate-200 dark:border-slate-700";
+                let badgeColor = "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300";
+                if (kpi.status === "healthy") {
+                    statusColor = "border-emerald-200 dark:border-emerald-800/40 border-t-4 border-t-emerald-500";
+                    badgeColor = "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400";
+                } else if (kpi.status === "warning") {
+                    statusColor = "border-amber-200 dark:border-amber-800/40 border-t-4 border-t-amber-500";
+                    badgeColor = "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400";
+                } else if (kpi.status === "danger") {
+                    statusColor = "border-rose-200 dark:border-rose-800/40 border-t-4 border-t-rose-500";
+                    badgeColor = "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400";
+                }
+
+                grid.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border p-4 flex flex-col justify-between ${statusColor}">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">${kpi.title}</span>
+                            <span class="text-lg font-black tracking-tight">${kpi.value}</span>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${badgeColor}">${kpi.sub}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const score = calculateMonetizationScore();
+            const strokeOffset = 339.3 - (339.3 * (score / 100));
+            document.getElementById('score-circle').style.strokeDashoffset = strokeOffset;
+            document.getElementById('score-value').innerText = score;
+
+            const scoreCircle = document.getElementById('score-circle');
+            scoreCircle.className = (score >= 80) ? "text-emerald-500" : (score < 60) ? "text-rose-500" : "text-amber-500";
+
+            document.getElementById('breakdown-demand').innerText = agg.match_rate.toFixed(1) + "%";
+            document.getElementById('breakdown-display').innerText = agg.show_rate.toFixed(1) + "%";
+            document.getElementById('breakdown-engagement').innerText = agg.ctr.toFixed(1) + "%";
+
+            renderAppHealthTable();
+            renderFunnelVisualization(agg);
+            renderAdFormatPerformanceList(filtered);
+            renderInlineDiagnostics();
+        }
+
+        function renderAppHealthTable() {
+            const tbody = document.getElementById('app-health-table-body');
+            tbody.innerHTML = '';
+            
+            const uniqueApps = [...new Set(appState.rawRecords.map(r => r.app))];
+            const appRows = [];
+
+            uniqueApps.forEach(appName => {
+                const rows = appState.rawRecords.filter(r => r.app === appName);
+                const agg = aggregateRecords(rows);
+                
+                const matchScore = Math.min(100, (agg.match_rate / appState.config.matchRateGreen) * 100);
+                const showScore = Math.min(100, (agg.show_rate / appState.config.showRateGreen) * 100);
+                const healthIndex = Math.round((matchScore * 0.5) + (showScore * 0.5));
+
+                appRows.push({ name: appName, ...agg, healthIndex });
+            });
+
+            appRows.sort((a,b) => a.healthIndex - b.healthIndex);
+
+            appRows.forEach(app => {
+                let badgeColor = app.healthIndex >= 80 ? "bg-emerald-500 text-white" : app.healthIndex < 60 ? "bg-rose-500 text-white" : "bg-amber-500 text-slate-900";
+                let dotColor = app.healthIndex >= 80 ? "bg-emerald-500" : app.healthIndex < 60 ? "bg-rose-500" : "bg-amber-500";
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 cursor-pointer" onclick="drillDownApp('${app.name}')">
+                        <td class="py-3 font-semibold text-slate-800 dark:text-slate-200 flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full ${dotColor}"></span>
+                            <span>${app.name}</span>
+                        </td>
+                        <td class="py-3 font-mono">$${app.revenue.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td class="py-3 font-mono">${app.impressions.toLocaleString()}</td>
+                        <td class="py-3">${app.show_rate.toFixed(1)}%</td>
+                        <td class="py-3">${app.match_rate.toFixed(1)}%</td>
+                        <td class="py-3 text-center">
+                            <span class="text-[11px] font-bold px-2 py-1 rounded-full ${badgeColor}">${app.healthIndex}/100</span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderFunnelVisualization(agg) {
+            const container = document.getElementById('funnel-container');
+            container.innerHTML = '';
+
+            const stages = [
+                { label: "Ad Requests", value: agg.requests, percentage: 100, color: "bg-indigo-500" },
+                { label: "Matched Responses", value: agg.matched_requests, percentage: agg.match_rate, color: "bg-sky-500", prevLabel: "Match Rate" },
+                { label: "Show Deliveries", value: agg.impressions, percentage: agg.show_rate, color: "bg-emerald-500", prevLabel: "Show Rate" },
+                { label: "Clickthroughs", value: agg.clicks, percentage: agg.ctr, color: "bg-amber-500", prevLabel: "CTR" }
+            ];
+
+            stages.forEach((stage, idx) => {
+                let conversionBar = '';
+                if (idx > 0) {
+                    conversionBar = `
+                        <div class="flex items-center space-x-2 text-[10px] font-semibold text-slate-400 py-1 pl-4 border-l-2 border-dashed border-slate-200 dark:border-slate-700 my-1">
+                            <i data-lucide="corner-down-right" class="w-3.5 h-3.5"></i>
+                            <span>${stage.prevLabel}: ${stage.percentage.toFixed(1)}%</span>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += `
+                    ${conversionBar}
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span>${stage.label}</span>
+                            <span class="font-mono text-slate-400">${stage.value.toLocaleString()}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                            <div class="${stage.color} h-2 rounded-full" style="width: ${idx === 0 ? '100' : Math.min(100, (stage.value / stages[0].value) * 100)}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        function renderAdFormatPerformanceList(filtered) {
+            const container = document.getElementById('format-performance-list');
+            container.innerHTML = '';
+
+            const uniqueFormats = [...new Set(filtered.map(r => r.ad_format))];
+            
+            uniqueFormats.forEach(fmt => {
+                const rows = filtered.filter(r => r.ad_format === fmt);
+                const agg = aggregateRecords(rows);
+                
+                let textClass = "🟢 Healthy";
+                let statusColor = "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20";
+                if (agg.show_rate < appState.config.showRateRed || agg.match_rate < appState.config.matchRateRed) {
+                    statusColor = "text-rose-500 bg-rose-50 dark:bg-rose-950/20";
+                    textClass = "🔴 Warning";
+                }
+
+                container.innerHTML += `
+                    <div class="p-3 border border-slate-100 dark:border-slate-700/60 rounded-xl flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-bold">${fmt}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor}">${textClass}</span>
+                            </div>
+                            <div class="flex space-x-4 text-[11px] text-slate-400 mt-1">
+                                <span>Rev: <strong class="text-slate-700 dark:text-slate-300 font-mono">$${agg.revenue.toFixed(2)}</strong></span>
+                                <span>Show Rate: <strong class="text-slate-700 dark:text-slate-300 font-mono">${agg.show_rate.toFixed(1)}%</strong></span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 block uppercase font-bold">Avg eCPM</span>
+                            <span class="text-xs font-black font-mono text-emerald-500">$${agg.ecpm.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderInlineDiagnostics() {
+            const list = document.getElementById('diagnostics-list');
+            list.innerHTML = '';
+
+            if (appState.activeAlarms.length === 0) {
+                list.innerHTML = `
+                    <div class="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs rounded-xl flex items-center space-x-2">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        <span>All indicators conform to normal levels.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            appState.activeAlarms.slice(0, 2).forEach(alarm => {
+                list.innerHTML += `
+                    <div class="p-4 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-900/30 rounded-xl space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-rose-700 dark:text-rose-400">${alarm.app} &rarr; ${alarm.format}</span>
+                            <span class="text-[10px] font-black text-rose-500 uppercase">${alarm.metric}: ${alarm.value}</span>
+                        </div>
+                        <p class="text-xs text-slate-500">${alarm.issue}</p>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // --- TREND ANALYSIS CHARTS ---
+        function renderTrendChart() {
+            const ctx = document.getElementById('trendChart');
+            if (!ctx) return;
+
+            if (appState.charts.trend) appState.charts.trend.destroy();
+
+            const metric = document.getElementById('trend-metric-select').value;
+            const records = getFilteredRecords();
+
+            const dates = [...new Set(records.map(r => r.date))].sort();
+            const datasetsMap = {};
+
+            dates.forEach(d => {
+                const dayRows = records.filter(r => r.date === d);
+                const apps = [...new Set(dayRows.map(r => r.app))];
+                apps.forEach(app => {
+                    const appDayRows = dayRows.filter(r => r.app === app);
+                    const agg = aggregateRecords(appDayRows);
+
+                    if (!datasetsMap[app]) datasetsMap[app] = [];
+                    datasetsMap[app].push({ x: d, y: agg[metric] });
+                });
+            });
+
+            const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'];
+            const datasets = Object.keys(datasetsMap).map((appName, index) => {
+                return {
+                    label: appName,
+                    data: datasetsMap[appName],
+                    borderColor: colors[index % colors.length],
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false
+                };
+            });
+
+            appState.charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'category', grid: { display: false }, ticks: { font: { size: 9 }, maxTicksLimit: 12 } },
+                        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 } } }
+                    },
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10 } } } }
+                }
+            });
+        }
+
+        function renderTrendTabChart() {
+            const ctx = document.getElementById('trendTabChart');
+            if (!ctx) return;
+
+            if (appState.charts.trendTab) appState.charts.trendTab.destroy();
+
+            const metric = document.getElementById('trend-tab-metric').value;
+            const records = getFilteredRecords();
+            const dates = [...new Set(records.map(r => r.date))].sort();
+
+            const dataPoints = dates.map(d => {
+                const dayRows = records.filter(r => r.date === d);
+                const agg = aggregateRecords(dayRows);
+                return agg[metric];
+            });
+
+            appState.charts.trendTab = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: `Portfolio Log: ${metric}`,
+                        data: dataPoints,
+                        backgroundColor: '#22c55eCC',
+                        borderColor: '#22c55e',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 15, font: { size: 9 } } },
+                        y: { ticks: { font: { size: 9 } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function setTrendInterval(interval) {
+            appState.trendTabInterval = interval;
+            const btnDaily = document.getElementById('btn-interval-daily');
+            const btnWeekly = document.getElementById('btn-interval-weekly');
+
+            if (interval === 'daily') {
+                btnDaily.className = "text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white";
+                btnWeekly.className = "text-xs font-bold px-3 py-1.5 rounded-lg bg-transparent text-slate-400";
+            } else {
+                btnWeekly.className = "text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white";
+                btnDaily.className = "text-xs font-bold px-3 py-1.5 rounded-lg bg-transparent text-slate-400";
+            }
+            renderTrendTabChart();
+        }
+
+        // --- APPS EXPLORER ---
+        function renderAppsListTab() {
+            const container = document.getElementById('app-explorer-container');
+            container.innerHTML = '';
+
+            const apps = [...new Set(appState.rawRecords.map(r => r.app))];
+
+            apps.forEach(appName => {
+                const rows = appState.rawRecords.filter(r => r.app === appName);
+                const agg = aggregateRecords(rows);
+                const matchScore = Math.min(100, (agg.match_rate / appState.config.matchRateGreen) * 100);
+                const showScore = Math.min(100, (agg.show_rate / appState.config.showRateGreen) * 100);
+                const healthIndex = Math.round((matchScore * 0.5) + (showScore * 0.5));
+
+                let badgeColor = healthIndex >= 80 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200";
+
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                        <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black">
+                                    ${appName.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">${appName}</h3>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold px-3 py-1 rounded-full border ${badgeColor}">Index: ${healthIndex}/100</span>
+                        </div>
+                        <div class="p-5 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 bg-slate-50/50 dark:bg-slate-900/30">
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase">Estimated Earnings</span>
+                                <span class="text-sm font-black text-emerald-500">$${agg.revenue.toFixed(2)}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase">Match Rate</span>
+                                <span class="text-sm font-black">${agg.match_rate.toFixed(1)}%</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase">Show Rate</span>
+                                <span class="text-sm font-black">${agg.show_rate.toFixed(1)}%</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase">CTR</span>
+                                <span class="text-sm font-black">${agg.ctr.toFixed(1)}%</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase">Requests</span>
+                                <span class="text-sm font-bold">${agg.requests.toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase">eCPM</span>
+                                <span class="text-sm font-black text-emerald-500">$${agg.ecpm.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function drillDownApp(appName) {
+            switchTab('apps');
+        }
+
+        // --- ALARM CENTER ---
+        function renderAlarmCenter() {
+            const container = document.getElementById('alarm-center-list');
+            container.innerHTML = '';
+
+            if (appState.activeAlarms.length === 0) {
+                container.innerHTML = `
+                    <div class="p-12 text-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                        <p class="text-xs text-slate-400">All configurations meet target standards.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            appState.activeAlarms.forEach(alarm => {
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-rose-500"></div>
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-bold">${alarm.app} &rarr; ${alarm.format}</h3>
+                            <span class="text-xs font-black font-mono text-rose-500">Risk: $${alarm.revenueRisk.toFixed(2)}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">${alarm.interpretation}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // --- OPPORTUNITY HUB ---
+        function renderOpportunities() {
+            const container = document.getElementById('opportunities-list');
+            container.innerHTML = '';
+
+            if (appState.opportunities.length === 0) {
+                container.innerHTML = `
+                    <p class="text-xs text-slate-400">No priority optimizations detected.</p>
+                `;
+                return;
+            }
+
+            appState.opportunities.forEach(opp => {
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-2">
+                        <h3 class="font-bold text-sm">${opp.app} &mdash; ${opp.format}</h3>
+                        <p class="text-xs text-slate-500">${opp.diagnosis}</p>
+                        <p class="text-[11px] text-emerald-500 font-semibold mt-2">${opp.recommendation}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // --- REPORT COMPILER ---
+        function compileReport() {
+            const selector = document.getElementById('report-source-selector');
+            const preview = document.getElementById('report-preview-box');
+            const mailto = document.getElementById('mailto-anchor');
+            
+            if (!selector || selector.value === "none" || !preview) {
+                if (preview) preview.innerText = "No metrics configured to generate reports.";
+                return;
+            }
+
+            const targetAlarm = appState.activeAlarms.find(a => a.id === selector.value);
+            if (!targetAlarm) return;
+
+            const subject = `ALERT: ${targetAlarm.app} [${targetAlarm.format}] Performance Flag`;
+            const content = `Date: 2026-09-08\n` +
+                `Property: ${targetAlarm.app}\n` +
+                `Indicator: ${targetAlarm.metric} is currently ${targetAlarm.value}.\n` +
+                `Target Minimum: >= ${targetAlarm.threshold}.\n\n` +
+                `Diagnostics:\n` +
+                `${targetAlarm.interpretation}\n\n` +
+                `Action Required:\n` +
+                `${targetAlarm.recommendation}`;
+
+            preview.innerText = content;
+            mailto.href = `mailto:dev-ops@example.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(content)}`;
+        }
+
+        function copyToClipboard() {
+            const preview = document.getElementById('report-preview-box');
+            navigator.clipboard.writeText(preview.innerText);
+            alert('Copied report template.');
+        }
+
+        // --- DATA COMMITTING ---
+        function commitNormalizedData(rawRows, finalMapping, filename) {
+            const tempTargetRows = [];
+            
+            rawRows.forEach(row => {
+                if (!row[finalMapping.app]) return;
+
+                const requestsVal = Number(row[finalMapping.requests]) || 0;
+                const matchedVal = Number(row[finalMapping.matched_requests]) || Number(row[finalMapping.requests]) || 0;
+                const impressionsVal = Number(row[finalMapping.impressions]) || 0;
+                const clicksVal = Number(row[finalMapping.clicks]) || 0;
+                const revenueVal = Number(row[finalMapping.revenue]) || 0;
+
+                const matchedRate = requestsVal > 0 ? (matchedVal / requestsVal) * 100 : 0;
+                const showRate = matchedVal > 0 ? (impressionsVal / matchedVal) * 100 : 0;
+                const ctr = impressionsVal > 0 ? (clicksVal / impressionsVal) * 100 : 0;
+                const arpv = impressionsVal > 0 ? (revenueVal / impressionsVal) : 0;
+                const ecpm = impressionsVal > 0 ? (revenueVal / impressionsVal) * 1000 : 0;
+
+                tempTargetRows.push({
+                    app: row[finalMapping.app].trim(),
+                    date: row[finalMapping.date] || new Date().toISOString().split('T')[0],
+                    ad_format: row[finalMapping.ad_format] || "Banner",
+                    ad_unit: row[finalMapping.ad_unit] || "Unassigned_Placement",
+                    requests: requestsVal,
+                    matched_requests: matchedVal,
+                    match_rate: matchedRate,
+                    show_rate: showRate,
+                    impressions: impressionsVal,
+                    clicks: clicksVal,
+                    ctr: ctr,
+                    revenue: revenueVal,
+                    arpv: arpv,
+                    ecpm: ecpm
+                });
+            });
+
+            appState.rawRecords = [...appState.rawRecords, ...tempTargetRows];
+            
+            appState.importedFiles.push({
+                fileName: filename,
+                appName: filename,
+                rows: tempTargetRows.length,
+                isDemo: false
+            });
+        }
+
+        function clearImportedData() {
+            localStorage.clear();
+            appState.rawRecords = [];
+            appState.importedFiles = [];
+            generateDemoData();
+            initDashboard();
+            switchTab('dashboard');
+        }
+
+        function updateSettingsDisplay() {
+            const sRed = document.getElementById('threshold-show-red').value;
+            const sGreen = document.getElementById('threshold-show-green').value;
+            const mRed = document.getElementById('threshold-match-red').value;
+            const mGreen = document.getElementById('threshold-match-green').value;
+
+            document.getElementById('lbl-show-red').innerText = `< ${sRed}%`;
+            document.getElementById('lbl-show-green').innerText = `>= ${sGreen}%`;
+            document.getElementById('lbl-match-red').innerText = `< ${mRed}%`;
+            document.getElementById('lbl-match-green').innerText = `>= ${mGreen}%`;
+        }
+
+        function saveSettings() {
+            appState.config.showRateRed = Number(document.getElementById('threshold-show-red').value);
+            appState.config.showRateGreen = Number(document.getElementById('threshold-show-green').value);
+            appState.config.matchRateRed = Number(document.getElementById('threshold-match-red').value);
+            appState.config.matchRateGreen = Number(document.getElementById('threshold-match-green').value);
+
+            saveStateToLocalStorage();
+            initDashboard();
+            alert("Updated thresholds.");
+            switchTab('dashboard');
+        }
+
+        function exportData() {
+            const records = getFilteredRecords();
+            if (records.length === 0) return alert("Empty active data set.");
+
+            const headers = Object.keys(records[0]).join(',');
+            const rows = records.map(r => Object.values(r).join(',')).join('\n');
+            const csvBlob = new Blob([`${headers}\n${rows}`], { type: 'text/csv' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(csvBlob);
+            link.download = `AdMob_Report.csv`;
+            link.click();
+        }
+
+        function switchTab(tabId) {
+            appState.currentTab = tabId;
+            
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            
+            const navElements = ['dashboard', 'apps', 'alarms', 'opportunities', 'trends', 'reports', 'csv', 'settings'];
+            navElements.forEach(item => {
+                const el = document.getElementById(`nav-${item}`);
+                if (el) {
+                    el.className = "flex items-center space-x-3 w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700";
+                }
+            });
+
+            const activePanel = document.getElementById(`tab-${tabId}`);
+            if (activePanel) activePanel.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.className = "flex items-center space-x-3 w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white";
+            }
+
+            if (tabId === 'apps') renderAppsListTab();
+            if (tabId === 'alarms') renderAlarmCenter();
+            if (tabId === 'opportunities') renderOpportunities();
+            if (tabId === 'trends') renderTrendTabChart();
+        }
+
+        function applyFilters() {
+            appState.activeFilters.app = document.getElementById('filter-app').value;
+            appState.activeFilters.date = document.getElementById('filter-date').value;
+            initDashboard();
+        }
+
+        function handleGlobalSearch(val) {
+            appState.searchQuery = val;
+            initDashboard();
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+            } else {
+                html.classList.add('dark');
+            }
+        }
+    </script>
+</body>
+</html>
