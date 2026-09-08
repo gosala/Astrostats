@@ -51,13 +51,6 @@
         .dark ::-webkit-scrollbar-thumb {
             background: #475569;
         }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(8px);
-        }
-        .dark .glass-panel {
-            background: rgba(30, 41, 59, 0.8);
-        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen transition-colors duration-200">
@@ -145,7 +138,7 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
                         </span>
-                        <input type="text" id="global-search" oninput="handleGlobalSearch(this.value)" placeholder="Search apps, formats..." class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="global-search" oninput="handleGlobalSearch(this.value)" placeholder="Search apps..." class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <!-- Live GitHub Sync Button -->
                     <button onclick="syncFromGitHub()" class="flex items-center space-x-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 px-3 py-2 rounded-lg text-xs font-bold transition-all hover:bg-emerald-100/60">
@@ -184,7 +177,7 @@
                         </div>
                         <div>
                             <p class="text-xs font-bold" id="sync-banner-title">Syncing with GitHub...</p>
-                            <p class="text-[10px] text-slate-400" id="sync-banner-desc">Discovered directory data files. Downloading and parsing raw logs.</p>
+                            <p class="text-[10px] text-slate-400" id="sync-banner-desc">Parsing raw logs.</p>
                         </div>
                     </div>
                 </div>
@@ -567,10 +560,8 @@
             document.getElementById('gh-token').value = appState.github.token || '';
 
             if (appState.rawRecords.length === 0) {
-                // If there are no cached logs, run initial connection check to GitHub
                 syncFromGitHub();
             } else {
-                // Otherwise initialize on state cached inside the browser
                 updateGitHubStatusLabel();
                 initDashboard();
             }
@@ -641,48 +632,89 @@
             }
         }
 
-        // --- GITHUB SYNC ENGINE ---
+        // --- RESILIENT GITHUB SYNC ENGINE ---
         async function syncFromGitHub() {
             const syncIcon = document.getElementById('sync-icon');
             const syncText = document.getElementById('sync-btn-text');
             const syncBanner = document.getElementById('github-sync-banner');
 
-            // Visual loading flags
             syncIcon.classList.add('animate-spin');
             syncText.innerText = "Connecting...";
             syncBanner.classList.remove('hidden');
 
             const { username, repo, path, branch, token } = appState.github;
-            const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}?ref=${branch}`;
 
+            // Prepare headers
             const headers = {};
             if (token && token.trim() !== "") {
                 headers['Authorization'] = `token ${token.trim()}`;
             }
 
-            try {
-                document.getElementById('sync-banner-title').innerText = "Querying GitHub Directory...";
-                const response = await fetch(apiUrl, { headers });
-                
-                if (!response.ok) {
-                    throw new Error(`GitHub Directory Access Failed (Status ${response.status}). fallback to demo.`);
-                }
+            // Fallback Branch List Strategy
+            let branchesToTry = [branch];
+            if (branch === 'main') branchesToTry.push('master');
+            else if (branch === 'master') branchesToTry.push('main');
 
-                const contents = await response.json();
-                const csvFiles = contents.filter(item => item.type === 'file' && item.name.endsWith('.csv'));
+            let contents = null;
+            let finalBranchUsed = branch;
+            let errorStatus = 200;
+
+            // Attempt fetching directory contents sequentially on fallback branches
+            for (let currentBranch of branchesToTry) {
+                const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}?ref=${currentBranch}`;
+                try {
+                    document.getElementById('sync-banner-title').innerText = `Syncing (ref: ${currentBranch})...`;
+                    const response = await fetch(apiUrl, { headers });
+                    if (response.ok) {
+                        contents = await response.json();
+                        finalBranchUsed = currentBranch;
+                        break;
+                    } else {
+                        errorStatus = response.status;
+                    }
+                } catch (e) {
+                    console.warn(`Fetch failed for branch ${currentBranch}:`, e);
+                }
+            }
+
+            // If we still don't have directory contents, alert the user with helpful checklist
+            if (!contents) {
+                syncIcon.classList.remove('animate-spin');
+                syncText.innerText = "Sync GitHub Data";
+                syncBanner.classList.add('hidden');
+
+                let explanation = `Sync Interrupted (Error Status ${errorStatus}).\n\n`;
+                explanation += "Please verify the following settings:\n\n";
+                explanation += "1. PRIVATE REPOSITORY: If your repository is private, you must provide a 'Personal Access Token' in the Config settings.\n\n";
+                explanation += "2. CASE SENSITIVITY: Ensure your folder on GitHub is named exactly 'data' in lowercase. If it is named 'Data', change your 'CSV Directory Path' setting to 'Data'.\n\n";
+                explanation += `3. DEFAULT BRANCH: Verify if your repository defaults to 'main' or 'master' (attempted ref names: ${branchesToTry.join(', ')}).\n\n`;
+                explanation += `4. CREDENTIALS: Username must be exactly "${username}" and Repo exactly "${repo}".`;
+                
+                alert(explanation);
+
+                if (appState.rawRecords.length === 0) {
+                    generateDemoData();
+                    initDashboard();
+                }
+                return;
+            }
+
+            try {
+                // Filter files inside folder matching .csv structure
+                const csvFiles = contents.filter(item => item.type === 'file' && item.name.toLowerCase().endsWith('.csv'));
 
                 if (csvFiles.length === 0) {
-                    throw new Error(`No CSV files discovered inside folder: "${path}"`);
+                    throw new Error(`Directory query succeeded, but no CSV files were found inside: "${path}"`);
                 }
 
-                // Clear demo data
+                // Reset existing cache
                 appState.rawRecords = [];
                 appState.importedFiles = [];
 
                 for (let i = 0; i < csvFiles.length; i++) {
                     const fileObj = csvFiles[i];
                     document.getElementById('sync-banner-title').innerText = `Syncing [${i + 1}/${csvFiles.length}]`;
-                    document.getElementById('sync-banner-desc').innerText = `Downloading and compiling ${fileObj.name}`;
+                    document.getElementById('sync-banner-desc').innerText = `Parsing remote logs from ${fileObj.name}`;
                     
                     const fileContentResponse = await fetch(fileObj.download_url, { headers });
                     const fileTextData = await fileContentResponse.text();
@@ -690,18 +722,20 @@
                     await parseAndCommitRemoteCSV(fileTextData, fileObj.name);
                 }
 
+                // Cache active branch context dynamically
+                appState.github.branch = finalBranchUsed;
                 saveStateToLocalStorage();
                 updateGitHubStatusLabel();
                 initDashboard();
                 
-                alert(`GitHub synchronization successful. Discovered and compiled ${csvFiles.length} properties.`);
+                alert(`Successfully synchronized ${csvFiles.length} ad log files.`);
             } catch (err) {
                 console.error(err);
-                // If it fails and we have no records, generate standard demo sets
                 if (appState.rawRecords.length === 0) {
                     generateDemoData();
+                    initDashboard();
                 }
-                alert(`Sync Interrupted: ${err.message}`);
+                alert(`Sync Error: ${err.message}`);
             } finally {
                 syncIcon.classList.remove('animate-spin');
                 syncText.innerText = "Sync GitHub Data";
@@ -732,12 +766,11 @@
                         const coreMissing = ['app', 'requests', 'impressions', 'revenue'].filter(k => !normalizedMapping[k]);
                         
                         if (coreMissing.length > 0) {
-                            // Column mismatch fallback
                             appState.mappingData.fileHeaders = headers;
                             appState.mappingData.parsedResults = results;
                             appState.mappingData.fileName = filename;
                             showFieldMapper(headers, coreMissing);
-                            resolve(); // will resolve once manual mapper applies
+                            resolve();
                         } else {
                             commitNormalizedData(results.data, normalizedMapping, filename);
                             resolve();
@@ -761,7 +794,7 @@
             syncFromGitHub();
         }
 
-        // --- CORE LOGIC ---
+        // --- DATA PROCESSING AND CALCULATIONS ---
         function generateDemoData() {
             const tempRecords = [];
             const apps = [
@@ -1354,7 +1387,7 @@
 
                 container.innerHTML += `
                     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
-                        <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
+                        <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black">
                                     ${appName.charAt(0)}
