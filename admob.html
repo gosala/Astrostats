@@ -395,30 +395,56 @@
                     <!-- Repository Configuration Details -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-4 col-span-1">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Connection Config</h3>
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Sync Mode Config</h3>
                             <div class="space-y-3 text-xs">
                                 <div>
-                                    <label class="block font-semibold mb-1">GitHub Username</label>
-                                    <input type="text" id="gh-username" value="jay" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                    <label class="block font-bold mb-2">Sync Engine Mode</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="flex items-center space-x-1.5 p-2 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50">
+                                            <input type="radio" name="sync-mode" value="relative" id="sync-mode-relative" checked onchange="toggleSyncModeUI()">
+                                            <span class="font-semibold text-[10px]">Direct Fetch</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 p-2 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50">
+                                            <input type="radio" name="sync-mode" value="api" id="sync-mode-api" onchange="toggleSyncModeUI()">
+                                            <span class="font-semibold text-[10px]">GitHub API</span>
+                                        </label>
+                                    </div>
                                 </div>
+
+                                <!-- Mode B: Direct Fetch options -->
+                                <div id="opt-relative-block">
+                                    <label class="block font-semibold mb-1">Target CSV File Names (comma-separated)</label>
+                                    <input type="text" id="gh-relative-files" value="app_aimagic.csv" placeholder="e.g. app_aimagic.csv, another.csv" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none font-mono">
+                                    <span class="text-[10px] text-slate-400 mt-1 block leading-normal">Input filenames located inside your 'data/' folder. No API credentials required.</span>
+                                </div>
+
+                                <!-- Mode A: GitHub API options -->
+                                <div id="opt-api-block" class="hidden space-y-3">
+                                    <div>
+                                        <label class="block font-semibold mb-1">GitHub Username</label>
+                                        <input type="text" id="gh-username" value="jay" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Repository Name</label>
+                                        <input type="text" id="gh-repo" value="Astrostats" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Branch</label>
+                                        <input type="text" id="gh-branch" value="main" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Personal Access Token (Classic)</label>
+                                        <input type="password" id="gh-token" placeholder="Optional" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <label class="block font-semibold mb-1">Repository Name</label>
-                                    <input type="text" id="gh-repo" value="Astrostats" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
+                                    <label class="block font-semibold mb-1">CSV Directory Folder</label>
+                                    <input type="text" id="gh-path" value="data" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none font-mono">
                                 </div>
-                                <div>
-                                    <label class="block font-semibold mb-1">CSV Directory Path</label>
-                                    <input type="text" id="gh-path" value="data" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
-                                </div>
-                                <div>
-                                    <label class="block font-semibold mb-1">Branch</label>
-                                    <input type="text" id="gh-branch" value="main" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
-                                </div>
-                                <div>
-                                    <label class="block font-semibold mb-1">GitHub Personal Access Token (Optional)</label>
-                                    <input type="password" id="gh-token" placeholder="Optional - required only if private repo" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-2.5 focus:outline-none">
-                                </div>
+
                                 <button onclick="saveGitHubSettings()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-bold transition-colors">
-                                    Update Settings & Resync
+                                    Apply Configuration & Sync
                                 </button>
                             </div>
                         </div>
@@ -489,7 +515,7 @@
         </main>
     </div>
 
-    <!-- FIELD MAPPER MODAL (Backup fallback for anomalous CSV configurations) -->
+    <!-- FIELD MAPPER MODAL -->
     <div id="field-mapper-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
         <div class="bg-white dark:bg-slate-800 max-w-lg w-full rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl p-6 space-y-4">
             <h3 class="text-base font-bold text-amber-500">Unrecognized Column Mappings</h3>
@@ -512,7 +538,6 @@
             searchQuery: '',
             activeFilters: { app: 'all', date: '30' },
             importedFiles: [],
-            // Core Config
             config: {
                 showRateRed: 50,
                 showRateGreen: 70,
@@ -521,8 +546,9 @@
                 ctrRedDrop: 20,
                 arpvRedDrop: 20,
             },
-            // GitHub connection parameters
             github: {
+                syncMode: 'relative', // DEFAULT MODE: 'relative' (Bypasses API completely)
+                relativeFiles: 'app_aimagic.csv', // Target relative file names inside /data/
                 username: 'jay',
                 repo: 'Astrostats',
                 path: 'data',
@@ -552,12 +578,20 @@
             lucide.createIcons();
             loadStateFromLocalStorage();
             
-            // Set dynamic inputs with state configuration
+            // Set input values to current config states
             document.getElementById('gh-username').value = appState.github.username;
             document.getElementById('gh-repo').value = appState.github.repo;
             document.getElementById('gh-path').value = appState.github.path;
             document.getElementById('gh-branch').value = appState.github.branch;
             document.getElementById('gh-token').value = appState.github.token || '';
+            document.getElementById('gh-relative-files').value = appState.github.relativeFiles || 'app_aimagic.csv';
+            
+            if (appState.github.syncMode === 'api') {
+                document.getElementById('sync-mode-api').checked = true;
+            } else {
+                document.getElementById('sync-mode-relative').checked = true;
+            }
+            toggleSyncModeUI();
 
             if (appState.rawRecords.length === 0) {
                 syncFromGitHub();
@@ -632,7 +666,21 @@
             }
         }
 
-        // --- RESILIENT GITHUB SYNC ENGINE ---
+        function toggleSyncModeUI() {
+            const isRelative = document.getElementById('sync-mode-relative').checked;
+            const relBlock = document.getElementById('opt-relative-block');
+            const apiBlock = document.getElementById('opt-api-block');
+
+            if (isRelative) {
+                relBlock.classList.remove('hidden');
+                apiBlock.classList.add('hidden');
+            } else {
+                relBlock.classList.add('hidden');
+                apiBlock.classList.remove('hidden');
+            }
+        }
+
+        // --- DUAL-MODE GITHUB SYNC ENGINE ---
         async function syncFromGitHub() {
             const syncIcon = document.getElementById('sync-icon');
             const syncText = document.getElementById('sync-btn-text');
@@ -642,15 +690,66 @@
             syncText.innerText = "Connecting...";
             syncBanner.classList.remove('hidden');
 
-            const { username, repo, path, branch, token } = appState.github;
+            const mode = appState.github.syncMode || 'relative';
+            const { username, repo, path, branch, token, relativeFiles } = appState.github;
 
-            // Prepare headers
+            // --- MODE B: DIRECT RELATIVE FETCH (Recommended, bypasses API limits) ---
+            if (mode === 'relative') {
+                const fileList = relativeFiles.split(',').map(f => f.trim()).filter(f => f.length > 0);
+                if (fileList.length === 0) {
+                    alert("Please write at least one file name (e.g. app_aimagic.csv) inside Settings.");
+                    syncIcon.classList.remove('animate-spin');
+                    syncText.innerText = "Sync GitHub Data";
+                    syncBanner.classList.add('hidden');
+                    return;
+                }
+
+                try {
+                    // Reset existing lists
+                    appState.rawRecords = [];
+                    appState.importedFiles = [];
+
+                    for (let i = 0; i < fileList.length; i++) {
+                        const filename = fileList[i];
+                        const relativeUrl = `./${path}/${filename}`; // e.g., ./data/app_aimagic.csv
+                        
+                        document.getElementById('sync-banner-title').innerText = `Syncing [${i + 1}/${fileList.length}]`;
+                        document.getElementById('sync-banner-desc').innerText = `Fetching local path: ${relativeUrl}`;
+                        
+                        const response = await fetch(relativeUrl);
+                        if (!response.ok) {
+                            throw new Error(`Failed to download: "${relativeUrl}" (HTTP Status ${response.status}). Make sure it is pushed to GitHub Pages!`);
+                        }
+                        
+                        const text = await response.text();
+                        await parseAndCommitRemoteCSV(text, filename);
+                    }
+
+                    saveStateToLocalStorage();
+                    updateGitHubStatusLabel();
+                    initDashboard();
+                    alert(`Successfully parsed ${fileList.length} local logs.`);
+                } catch (err) {
+                    console.error(err);
+                    if (appState.rawRecords.length === 0) {
+                        generateDemoData();
+                        initDashboard();
+                    }
+                    alert(`Sync Interrupted: ${err.message}`);
+                } finally {
+                    syncIcon.classList.remove('animate-spin');
+                    syncText.innerText = "Sync GitHub Data";
+                    syncBanner.classList.add('hidden');
+                }
+                return;
+            }
+
+            // --- MODE A: GITHUB DIRECTORY API ---
             const headers = {};
             if (token && token.trim() !== "") {
                 headers['Authorization'] = `token ${token.trim()}`;
             }
 
-            // Fallback Branch List Strategy
             let branchesToTry = [branch];
             if (branch === 'main') branchesToTry.push('master');
             else if (branch === 'master') branchesToTry.push('main');
@@ -659,11 +758,10 @@
             let finalBranchUsed = branch;
             let errorStatus = 200;
 
-            // Attempt fetching directory contents sequentially on fallback branches
             for (let currentBranch of branchesToTry) {
                 const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}?ref=${currentBranch}`;
                 try {
-                    document.getElementById('sync-banner-title').innerText = `Syncing (ref: ${currentBranch})...`;
+                    document.getElementById('sync-banner-title').innerText = `Connecting (Ref: ${currentBranch})...`;
                     const response = await fetch(apiUrl, { headers });
                     if (response.ok) {
                         contents = await response.json();
@@ -673,22 +771,20 @@
                         errorStatus = response.status;
                     }
                 } catch (e) {
-                    console.warn(`Fetch failed for branch ${currentBranch}:`, e);
+                    console.warn(`Fallback branch fail for ${currentBranch}`, e);
                 }
             }
 
-            // If we still don't have directory contents, alert the user with helpful checklist
             if (!contents) {
                 syncIcon.classList.remove('animate-spin');
                 syncText.innerText = "Sync GitHub Data";
                 syncBanner.classList.add('hidden');
 
                 let explanation = `Sync Interrupted (Error Status ${errorStatus}).\n\n`;
-                explanation += "Please verify the following settings:\n\n";
-                explanation += "1. PRIVATE REPOSITORY: If your repository is private, you must provide a 'Personal Access Token' in the Config settings.\n\n";
-                explanation += "2. CASE SENSITIVITY: Ensure your folder on GitHub is named exactly 'data' in lowercase. If it is named 'Data', change your 'CSV Directory Path' setting to 'Data'.\n\n";
-                explanation += `3. DEFAULT BRANCH: Verify if your repository defaults to 'main' or 'master' (attempted ref names: ${branchesToTry.join(', ')}).\n\n`;
-                explanation += `4. CREDENTIALS: Username must be exactly "${username}" and Repo exactly "${repo}".`;
+                explanation += "Please verify your GitHub connection parameter details:\n\n";
+                explanation += "1. PRIVATE REPOSITORY: Try creating a Personal Access Token (classic) and pasting it into configuration settings.\n\n";
+                explanation += "2. CASE SENSITIVITY: Is the folder name on GitHub exactly 'data'? (capitalization matters)\n\n";
+                explanation += "3. DIRECT FETCH MODE: If you continue to see 404, switch the 'Sync Engine Mode' setting on the left to 'Direct Fetch' to bypass API queries completely!";
                 
                 alert(explanation);
 
@@ -700,14 +796,12 @@
             }
 
             try {
-                // Filter files inside folder matching .csv structure
                 const csvFiles = contents.filter(item => item.type === 'file' && item.name.toLowerCase().endsWith('.csv'));
 
                 if (csvFiles.length === 0) {
                     throw new Error(`Directory query succeeded, but no CSV files were found inside: "${path}"`);
                 }
 
-                // Reset existing cache
                 appState.rawRecords = [];
                 appState.importedFiles = [];
 
@@ -722,13 +816,12 @@
                     await parseAndCommitRemoteCSV(fileTextData, fileObj.name);
                 }
 
-                // Cache active branch context dynamically
                 appState.github.branch = finalBranchUsed;
                 saveStateToLocalStorage();
                 updateGitHubStatusLabel();
                 initDashboard();
                 
-                alert(`Successfully synchronized ${csvFiles.length} ad log files.`);
+                alert(`Successfully synchronized ${csvFiles.length} files.`);
             } catch (err) {
                 console.error(err);
                 if (appState.rawRecords.length === 0) {
@@ -784,6 +877,8 @@
         }
 
         function saveGitHubSettings() {
+            appState.github.syncMode = document.getElementById('sync-mode-api').checked ? 'api' : 'relative';
+            appState.github.relativeFiles = document.getElementById('gh-relative-files').value.trim();
             appState.github.username = document.getElementById('gh-username').value.trim();
             appState.github.repo = document.getElementById('gh-repo').value.trim();
             appState.github.path = document.getElementById('gh-path').value.trim();
@@ -1136,7 +1231,7 @@
             appRows.sort((a,b) => a.healthIndex - b.healthIndex);
 
             appRows.forEach(app => {
-                let badgeColor = app.healthIndex >= 80 ? "bg-emerald-500 text-white" : app.healthIndex < 60 ? "bg-rose-500 text-white" : "bg-amber-500 text-slate-900";
+                let badgeColor = app.healthIndex >= 80 ? "bg-emerald-5050 text-white" : app.healthIndex < 60 ? "bg-rose-500 text-white" : "bg-amber-500 text-slate-900";
                 let dotColor = app.healthIndex >= 80 ? "bg-emerald-500" : app.healthIndex < 60 ? "bg-rose-500" : "bg-amber-500";
 
                 tbody.innerHTML += `
@@ -1278,7 +1373,7 @@
                 const dayRows = records.filter(r => r.date === d);
                 const apps = [...new Set(dayRows.map(r => r.app))];
                 apps.forEach(app => {
-                    const appDayRows = dayRows.filter(r => r.app === app);
+                    const appDayRows = dayRows.filter(r => r.date === d && r.app === app);
                     const agg = aggregateRecords(appDayRows);
 
                     if (!datasetsMap[app]) datasetsMap[app] = [];
